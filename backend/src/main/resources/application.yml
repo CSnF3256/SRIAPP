@@ -1,0 +1,60 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: verificacion-sri-ant
+
+  # Redis Cloud (reemplazar con tus credenciales)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      username: ${REDIS_USERNAME:}
+      ssl:
+        enabled: ${REDIS_SSL:false}
+      timeout: 3000ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 86400000  # 24 horas en ms
+
+# CORS para el frontend React
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
+
+# Timeouts hacia APIs externas
+http:
+  client:
+    connect-timeout: 5000
+    read-timeout: 15000
+
+# Resilience4j - Circuit Breaker para la ANT
+resilience4j:
+  circuitbreaker:
+    instances:
+      ant-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+  timelimiter:
+    instances:
+      ant-service:
+        timeoutDuration: 20s
+  retry:
+    instances:
+      ant-service:
+        maxAttempts: 2
+        waitDuration: 3s
+
+logging:
+  level:
+    ec.gob.verificacion: DEBUG
+    org.springframework.web.reactive: INFO
